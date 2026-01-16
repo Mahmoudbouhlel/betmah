@@ -722,7 +722,7 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 
 <template>
  
-    <Head title="Ultimate Neural Dashboard" />
+    <Head title="" />
 
     <div class="min-h-screen bg-gray-50 p-4 lg:p-10 font-sans text-slate-900">
       <div class="max-w-[1600px] mx-auto space-y-10">
