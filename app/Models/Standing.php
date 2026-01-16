@@ -11,5 +11,10 @@ class Standing extends Model
         'match_id', 'team', 'rank', 'mp', 'wins', 'draws', 'losses',
         'goals', 'gd', 'pts', 'created_at'
     ];
+    public function match()
+{
+    return $this->belongsTo(FootballMatch::class, 'match_id');
+}
+
     public $timestamps = false;
 }

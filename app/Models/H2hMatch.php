@@ -11,5 +11,10 @@ class H2hMatch extends Model
         'match_id', 'date', 'home_team', 'away_team', 'score',
         'home_odds', 'draw_odds', 'away_odds', 'created_at'
     ];
+    public function match()
+{
+    return $this->belongsTo(FootballMatch::class, 'match_id');
+}
+
     public $timestamps = false;
 }

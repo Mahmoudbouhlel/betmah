@@ -19,6 +19,15 @@ class FootballMatch extends Model
         'scraped_at',
         'match_date', // ✅ ajout ici
     ];
+public function h2hMatches()
+{
+    return $this->hasMany(H2hMatch::class, 'match_id');
+}
+
+public function standings()
+{
+    return $this->hasMany(Standing::class, 'match_id');
+}
 
     public $timestamps = false;
 }

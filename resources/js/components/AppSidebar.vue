@@ -14,7 +14,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid,TrendingUp } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid,TrendingUp ,Star} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -28,6 +28,17 @@ const mainNavItems: NavItem[] = [
         href: '/value-bets', // ✅ Lien direct sans utiliser Ziggy
         icon: TrendingUp,
     },
+      {
+        title: 'Top Matches',
+        href: '/top-matches', // ✅ New route for Top 10 matches
+        icon: Star,
+    },
+    {
+  title: 'Over 2.5',
+  href: '/over-25',  // or whatever route you define
+  icon: TrendingUp,
+},
+
 ];
 
 const footerNavItems: NavItem[] = [
