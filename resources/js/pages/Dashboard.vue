@@ -721,7 +721,7 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbs">
+ 
     <Head title="Ultimate Neural Dashboard" />
 
     <div class="min-h-screen bg-gray-50 p-4 lg:p-10 font-sans text-slate-900">
@@ -1387,7 +1387,7 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 
       </div>
     </div>
-  </AppLayout>
+ 
 </template>
 
 <style scoped>
