@@ -39,6 +39,7 @@ type Standing = {
   gd?: string | number;
   goals?: string;
 };
+
 const copiedMaster = ref(false);
 
 const copyToClipboard = async (text: string) => {
@@ -48,15 +49,15 @@ const copyToClipboard = async (text: string) => {
   } catch {
     // Fallback for older browsers / non-HTTPS contexts
     try {
-      const ta = document.createElement("textarea");
+      const ta = document.createElement('textarea');
       ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      ta.style.top = "-9999px";
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
       document.body.appendChild(ta);
       ta.focus();
       ta.select();
-      const ok = document.execCommand("copy");
+      const ok = document.execCommand('copy');
       document.body.removeChild(ta);
       return ok;
     } catch {
@@ -66,10 +67,7 @@ const copyToClipboard = async (text: string) => {
 };
 
 const masterTeamsText = computed(() => {
-  // Teams only (as you asked)
-  return masterCombo.value.matches
-    .map((m: any) => `${m.home_team} vs ${m.away_team}`)
-    .join("\n");
+  return masterCombo.value.matches.map((m: any) => `${m.home_team} vs ${m.away_team}`).join('\n');
 });
 
 const copyMasterTeams = async () => {
@@ -154,8 +152,8 @@ const DEFAULTS = {
   strategyFilter: 'all' as 'all' | 'neural-x' | 'top-pick' | 'value',
 
   minConfidence: 0,
-// DEFAULTS
-mpRange: { min: 0, max: 80 },
+
+  mpRange: { min: 0, max: 80 },
 
   homeWinRange: { min: 0, max: 100 },
   homeLossRange: { min: 0, max: 100 },
@@ -212,9 +210,6 @@ const loadState = () => {
 
     // prevent UI glitches
     state.showLeagueFilter = false;
-    if (!state.minDate && !state.maxDate) {
-      // ok
-    }
   } catch {
     // ignore
   }
@@ -252,7 +247,6 @@ const resetFilters = () => {
   state.showAdvanced = keepPanel.showAdvanced;
   state.collapse = keepPanel.collapse;
 
-  // close popovers
   state.showLeagueFilter = false;
 };
 
@@ -418,7 +412,11 @@ const analyzedMatches = computed(() => {
     const away = getTeamStats(match.away_team);
     const h2h = getH2HStats(match);
 
-    const odds = { h: toNum(match.home_odds, 0), d: toNum(match.draw_odds, 0), a: toNum(match.away_odds, 0) };
+    const odds = {
+      h: toNum(match.home_odds, 0),
+      d: toNum(match.draw_odds, 0),
+      a: toNum(match.away_odds, 0),
+    };
 
     const invH = odds.h > 0 ? 1 / odds.h : 0;
     const invD = odds.d > 0 ? 1 / odds.d : 0;
@@ -448,7 +446,7 @@ const analyzedMatches = computed(() => {
     const baseHome = sigmoid(strength);
     const baseAway = 1 - baseHome;
 
-    const baseDrawRate = clamp(((home.drawRate + away.drawRate) / 2) / 100, 0.10, 0.34);
+    const baseDrawRate = clamp(((home.drawRate + away.drawRate) / 2) / 100, 0.1, 0.34);
     const gapFactor = 1 - clamp(Math.abs(baseHome - 0.5) * 2, 0, 0.85);
     let drawProb = clamp(baseDrawRate * (0.55 + 0.65 * gapFactor), 0.07, 0.33);
 
@@ -470,7 +468,8 @@ const analyzedMatches = computed(() => {
     const confidence = clamp(Math.round(maxP * 100), 1, 99);
 
     const diffHA = probs.h - probs.a;
-    const dominantSide: 'home' | 'away' | 'none' = Math.abs(diffHA) >= 0.18 ? (diffHA > 0 ? 'home' : 'away') : 'none';
+    const dominantSide: 'home' | 'away' | 'none' =
+      Math.abs(diffHA) >= 0.18 ? (diffHA > 0 ? 'home' : 'away') : 'none';
     const dominanceIndex = clamp(Math.abs(diffHA), 0, 1);
 
     const edgeH = probs.h - implied.h;
@@ -494,7 +493,8 @@ const analyzedMatches = computed(() => {
     const rankAbs = Math.abs(rankSigned);
     const gdAbs = Math.abs(home.gd - away.gd);
 
-    const isNeuralXElite = confidence >= 92 && dominanceIndex >= 0.28 && (rankAbs >= 8 || gdAbs >= 8 || Math.abs(h2hAdv) >= 2);
+    const isNeuralXElite =
+      confidence >= 92 && dominanceIndex >= 0.28 && (rankAbs >= 8 || gdAbs >= 8 || Math.abs(h2hAdv) >= 2);
     const isTopPick = confidence >= 85 && dominanceIndex >= 0.22;
 
     const hasData = home.mp > 0 || away.mp > 0;
@@ -509,7 +509,11 @@ const analyzedMatches = computed(() => {
     if (reasons.length === 0) reasons.push('Match équilibré (profil serré).');
 
     const dominantLabel =
-      dominantSide === 'home' ? `Dominant: ${match.home_team}` : dominantSide === 'away' ? `Dominant: ${match.away_team}` : 'Dominant: Aucun (équilibré)';
+      dominantSide === 'home'
+        ? `Dominant: ${match.home_team}`
+        : dominantSide === 'away'
+          ? `Dominant: ${match.away_team}`
+          : 'Dominant: Aucun (équilibré)';
 
     const analysis: Analysis = {
       pick,
@@ -656,7 +660,7 @@ const masterCombo = computed(() => {
   const target = state.comboMode === 'home_wins' ? 15 : state.targetOdd;
   const sorted = [...filteredMatches.value].sort((a, b) => b.analysis.confidence - a.analysis.confidence);
 
-  let ticket: any[] = [];
+  const ticket: any[] = [];
   let totalOdd = 1;
 
   for (const m of sorted) {
@@ -701,7 +705,7 @@ const getWeeklyChallengeCombo = (matches: typeof analyzedMatches.value) => {
     weeklyMatches.get(date)!.push(m);
   }
 
-  let ticket: any[] = [];
+  const ticket: any[] = [];
   let totalOdd = 1;
 
   const sortedDates = Array.from(weeklyMatches.keys()).sort();
@@ -721,27 +725,39 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 </script>
 
 <template>
- 
-    <Head title="" />
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <Head title="Ultimate Neural Dashboard" />
 
-    <div class="min-h-screen bg-gray-50 p-4 lg:p-10 font-sans text-slate-900">
-      <div class="max-w-[1600px] mx-auto space-y-10">
+    <div class="min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-10 font-sans text-slate-900 overflow-x-hidden">
+      <div class="max-w-[1600px] mx-auto space-y-7 sm:space-y-10">
 
         <!-- Header -->
-        <header class="flex flex-col lg:flex-row justify-between items-center gap-6">
-         
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div
+              class="w-12 h-12 sm:w-16 sm:h-16 bg-slate-900 rounded-2xl sm:rounded-3xl flex items-center justify-center text-white text-3xl sm:text-4xl shadow-2xl shadow-slate-200"
+            >
+              🧠
+            </div>
 
-          <div class="flex flex-wrap items-center gap-4 justify-center">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-slate-900 leading-tight">
+              Ultimate<span class="text-indigo-600">Neural</span><span class="text-slate-300 ml-2">Dashboard</span>
+            </h1>
+          </div>
+
+          <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
             <button
               @click="state.showFilters = !state.showFilters"
               :class="[
-                'px-8 py-4 rounded-3xl font-black text-lg transition-all shadow-xl flex items-center gap-3 transform hover:scale-105',
+                'w-full sm:w-auto px-5 py-3 sm:px-8 sm:py-4 rounded-2xl sm:rounded-3xl font-black text-base sm:text-lg transition-all shadow-xl flex items-center justify-center sm:justify-start gap-3 transform hover:scale-[1.01] sm:hover:scale-105',
                 state.showFilters ? 'bg-white text-slate-900 border border-slate-200 shadow-slate-200' : 'bg-slate-900 text-white shadow-slate-200',
               ]"
             >
               🎛️ Filters
-              <span class="px-3 py-1 rounded-2xl text-[11px] font-black"
-                :class="state.showFilters ? 'bg-slate-100 text-slate-600' : 'bg-white/10 text-white/80'">
+              <span
+                class="px-3 py-1 rounded-2xl text-[11px] font-black"
+                :class="state.showFilters ? 'bg-slate-100 text-slate-600' : 'bg-white/10 text-white/80'"
+              >
                 {{ activeBadges.length }}
               </span>
             </button>
@@ -749,41 +765,53 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             <button
               @click="toggleWeeklyChallenge"
               :class="[
-                'px-10 py-5 rounded-3xl font-black text-xl transition-all shadow-xl flex items-center gap-3 transform hover:scale-105',
+                'w-full sm:w-auto px-6 py-3 sm:px-10 sm:py-5 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl transition-all shadow-xl flex items-center justify-center sm:justify-start gap-3 transform hover:scale-[1.01] sm:hover:scale-105',
                 state.showWeeklyChallenge ? 'bg-emerald-600 text-white shadow-emerald-200' : 'bg-slate-900 text-white shadow-slate-200',
               ]"
             >
               <span>⚔️</span> Titan Weekly Challenge
             </button>
 
-            <div class="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-200 font-black text-slate-400">
+            <div class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-200 font-black text-slate-400 text-center sm:text-left">
               Matchs: <span class="text-indigo-600">{{ filteredMatches.length }}</span>
             </div>
           </div>
         </header>
 
         <!-- Active badges when filters hidden -->
-        <div v-if="!state.showFilters && activeBadges.length > 0" class="bg-white/70 backdrop-blur border border-white/80 rounded-3xl p-6 shadow-lg">
+        <div
+          v-if="!state.showFilters && activeBadges.length > 0"
+          class="bg-white/70 backdrop-blur border border-white/80 rounded-3xl p-4 sm:p-6 shadow-lg"
+        >
           <div class="flex flex-wrap gap-2 items-center">
             <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest mr-2">Active</div>
-            <span v-for="b in activeBadges" :key="b" class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] font-black text-slate-700">
+            <span
+              v-for="b in activeBadges"
+              :key="b"
+              class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] font-black text-slate-700"
+            >
               {{ b }}
             </span>
-            <button @click="resetFilters" class="ml-auto px-4 py-2 rounded-2xl bg-rose-600 text-white text-[11px] font-black shadow hover:opacity-90">
+            <button
+              @click="resetFilters"
+              class="w-full sm:w-auto sm:ml-auto px-4 py-2 rounded-2xl bg-rose-600 text-white text-[11px] font-black shadow hover:opacity-90"
+            >
               Reset
             </button>
           </div>
         </div>
 
         <!-- Combo Controls -->
-        <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center lg:justify-start">
           <button
             v-for="odd in comboOptions"
             :key="odd"
             @click="setComboMode('normal', odd)"
             :class="[
-              'px-6 py-3 rounded-full font-black text-sm transition-all',
-              state.comboMode === 'normal' && state.targetOdd === odd && state.showMasterCombo ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50',
+              'w-full sm:w-auto px-5 py-3 rounded-full font-black text-sm transition-all',
+              state.comboMode === 'normal' && state.targetOdd === odd && state.showMasterCombo
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50',
             ]"
           >
             Combo x{{ odd }}
@@ -792,8 +820,10 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
           <button
             @click="setComboMode('home_wins')"
             :class="[
-              'px-6 py-3 rounded-full font-black text-sm transition-all',
-              state.comboMode === 'home_wins' && state.showMasterCombo ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50',
+              'w-full sm:w-auto px-5 py-3 rounded-full font-black text-sm transition-all',
+              state.comboMode === 'home_wins' && state.showMasterCombo
+                ? 'bg-emerald-600 text-white shadow-lg'
+                : 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50',
             ]"
           >
             🏆 Spécial x15 (Home Wins)
@@ -801,72 +831,123 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
         </div>
 
         <!-- Titan Weekly Challenge -->
-        <div v-if="state.showWeeklyChallenge" class="bg-white/50 backdrop-blur-xl border border-white/80 rounded-3xl p-12 text-slate-900 shadow-3xl animate-slide-up relative overflow-hidden">
+        <div
+          v-if="state.showWeeklyChallenge"
+          class="bg-white/50 backdrop-blur-xl border border-white/80 rounded-3xl p-6 sm:p-10 lg:p-12 text-slate-900 shadow-3xl animate-slide-up relative overflow-hidden"
+        >
           <div class="absolute top-0 left-0 w-full h-full bg-white/30 -z-10"></div>
 
-          <div class="flex justify-between items-center mb-12 relative z-10">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 sm:mb-12 relative z-10">
             <div>
-              <h2 class="text-5xl font-black tracking-tighter">Titan <span class="text-emerald-600">Weekly Challenge</span></h2>
-              <p class="text-slate-600 font-bold text-lg">2 Home Wins par jour, objectif cote >500</p>
-            </div>
-            <div class="text-right">
-              <div class="text-6xl font-black text-emerald-600 tracking-tighter">x{{ weeklyChallengeCombo.totalOdd }}</div>
-              <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Cote Totale Combinée (Cible: >{{ weeklyChallengeCombo.targetOdd }})</div>
+              <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter">
+                Titan <span class="text-emerald-600">Weekly Challenge</span>
+              </h2>
+              <p class="text-slate-600 font-bold text-sm sm:text-lg">2 Home Wins par jour, objectif cote &gt;500</p>
             </div>
 
+            <div class="w-full md:w-auto text-left md:text-right">
+              <div class="text-4xl sm:text-5xl lg:text-6xl font-black text-emerald-600 tracking-tighter">x{{ weeklyChallengeCombo.totalOdd }}</div>
+              <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Cote Totale Combinée (Cible: &gt;{{ weeklyChallengeCombo.targetOdd }})
+              </div>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 relative z-10">
-            <a v-for="m in weeklyChallengeCombo.matches" :key="m.id" :href="m.match_url" target="_blank"
-               class="bg-white/80 border border-white/90 rounded-3xl p-8 backdrop-blur-sm hover:bg-white transition-all group shadow-lg">
-              <div class="flex justify-between items-center mb-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 relative z-10">
+            <a
+              v-for="m in weeklyChallengeCombo.matches"
+              :key="m.id"
+              :href="m.match_url"
+              target="_blank"
+              class="bg-white/80 border border-white/90 rounded-3xl p-5 sm:p-7 lg:p-8 backdrop-blur-sm hover:bg-white transition-all group shadow-lg"
+            >
+              <div class="flex justify-between items-center mb-4 sm:mb-6">
                 <span class="text-[10px] font-black text-emerald-600 uppercase">{{ m.match_date }} • {{ m.match_time }}</span>
                 <span class="px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black">Pick: {{ m.selectedPick }} (@{{ m.selectedOdd }})</span>
               </div>
-              <div class="font-black text-xl mb-3 truncate group-hover:text-emerald-600 transition-colors">{{ m.home_team }} vs {{ m.away_team }}</div>
+              <div class="font-black text-base sm:text-lg lg:text-xl mb-2 sm:mb-3 truncate group-hover:text-emerald-600 transition-colors">
+                {{ m.home_team }} vs {{ m.away_team }}
+              </div>
               <p class="text-[11px] text-slate-600 font-bold leading-relaxed italic">"{{ m.analysis.why }}"</p>
-              <div class="mt-6 text-[9px] font-black text-slate-400 uppercase group-hover:text-slate-900">Voir Détails →</div>
+              <div class="mt-5 sm:mt-6 text-[9px] font-black text-slate-400 uppercase group-hover:text-slate-900">Voir Détails →</div>
             </a>
           </div>
 
-          <button @click="state.showWeeklyChallenge = false" class="absolute top-8 right-8 text-3xl opacity-30 hover:opacity-100 transition-opacity">✕</button>
+          <button
+            @click="state.showWeeklyChallenge = false"
+            class="absolute top-4 right-4 sm:top-8 sm:right-8 text-3xl opacity-30 hover:opacity-100 transition-opacity"
+          >
+            ✕
+          </button>
         </div>
 
         <!-- Master Combo -->
-        <div v-if="state.showMasterCombo" class="bg-white/50 backdrop-blur-xl border border-white/80 rounded-3xl p-12 text-slate-900 shadow-3xl animate-slide-up relative overflow-hidden">
+        <div
+          v-if="state.showMasterCombo"
+          class="bg-white/50 backdrop-blur-xl border border-white/80 rounded-3xl p-6 sm:p-10 lg:p-12 text-slate-900 shadow-3xl animate-slide-up relative overflow-hidden"
+        >
           <div class="absolute top-0 left-0 w-full h-full bg-white/30 -z-10"></div>
 
-          <div class="flex justify-between items-center mb-12 relative z-10">
-            <div>
-              <h2 class="text-5xl font-black tracking-tighter">
-                Daily <span :class="state.comboMode === 'home_wins' ? 'text-emerald-600' : 'text-indigo-600'">Master Combo</span>
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 sm:mb-12 relative z-10">
+            <div class="w-full">
+              <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter">
+                Daily
+                <span :class="state.comboMode === 'home_wins' ? 'text-emerald-600' : 'text-indigo-600'">Master Combo</span>
               </h2>
-              <p class="text-slate-600 font-bold text-lg">Sélection IA des matchs à haute confiance pour une cote cible de x{{ masterCombo.targetOdd }}</p>
+              <p class="text-slate-600 font-bold text-sm sm:text-lg">
+                Sélection IA des matchs à haute confiance pour une cote cible de x{{ masterCombo.targetOdd }}
+              </p>
+
+              <!-- Copy teams (mobile-friendly) -->
+              <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <button
+                  @click="copyMasterTeams"
+                  class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-900 text-white font-black text-[12px] shadow-lg hover:bg-indigo-600 transition-all"
+                >
+                  Copy Teams
+                </button>
+                <div v-if="copiedMaster" class="px-4 py-3 rounded-2xl bg-emerald-600 text-white font-black text-[12px] shadow text-center sm:text-left">
+                  Copied ✓
+                </div>
+              </div>
             </div>
-            <div class="text-right">
-              <div class="text-6xl font-black text-indigo-600 tracking-tighter">x{{ masterCombo.totalOdd }}</div>
+
+            <div class="w-full md:w-auto text-left md:text-right">
+              <div class="text-4xl sm:text-5xl lg:text-6xl font-black text-indigo-600 tracking-tighter">x{{ masterCombo.totalOdd }}</div>
               <div class="text-[10px] font-black uppercase tracking-widest text-slate-500">Cote Totale Combinée</div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 relative z-10">
-            <a v-for="m in masterCombo.matches" :key="m.id" :href="m.match_url" target="_blank"
-               class="bg-white/80 border border-white/90 rounded-3xl p-8 backdrop-blur-sm hover:bg-white transition-all group shadow-lg">
-              <div class="flex justify-between items-center mb-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 relative z-10">
+            <a
+              v-for="m in masterCombo.matches"
+              :key="m.id"
+              :href="m.match_url"
+              target="_blank"
+              class="bg-white/80 border border-white/90 rounded-3xl p-5 sm:p-7 lg:p-8 backdrop-blur-sm hover:bg-white transition-all group shadow-lg"
+            >
+              <div class="flex justify-between items-center mb-4 sm:mb-6">
                 <span class="text-[10px] font-black text-indigo-600 uppercase">{{ m.match_date }} • {{ m.match_time }}</span>
                 <span class="px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black">Pick: {{ m.selectedPick }} (@{{ m.selectedOdd }})</span>
               </div>
-              <div class="font-black text-xl mb-3 truncate group-hover:text-indigo-600 transition-colors">{{ m.home_team }} vs {{ m.away_team }}</div>
+              <div class="font-black text-base sm:text-lg lg:text-xl mb-2 sm:mb-3 truncate group-hover:text-indigo-600 transition-colors">
+                {{ m.home_team }} vs {{ m.away_team }}
+              </div>
               <p class="text-[11px] text-slate-600 font-bold leading-relaxed italic">"{{ m.analysis.why }}"</p>
-              <div class="mt-6 text-[9px] font-black text-slate-400 uppercase group-hover:text-slate-900">Voir Détails →</div>
+              <div class="mt-5 sm:mt-6 text-[9px] font-black text-slate-400 uppercase group-hover:text-slate-900">Voir Détails →</div>
             </a>
           </div>
 
-          <button @click="state.showMasterCombo = false" class="absolute top-8 right-8 text-3xl opacity-30 hover:opacity-100 transition-opacity">✕</button>
+          <button
+            @click="state.showMasterCombo = false"
+            class="absolute top-4 right-4 sm:top-8 sm:right-8 text-3xl opacity-30 hover:opacity-100 transition-opacity"
+          >
+            ✕
+          </button>
         </div>
 
         <!-- Strategy Tiles -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           <button
             v-for="s in [
               { id: 'all', label: 'Tous les Matchs', icon: '🌍' },
@@ -877,89 +958,104 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             :key="s.id"
             @click="state.strategyFilter = s.id"
             :class="[
-              'p-8 rounded-3xl border-2 transition-all duration-300 flex items-center gap-6 text-left relative overflow-hidden group',
-              state.strategyFilter === s.id ? 'bg-white border-indigo-600 shadow-xl transform scale-[1.02]' : 'bg-white border-transparent shadow-sm hover:border-slate-200',
+              'p-5 sm:p-7 lg:p-8 rounded-3xl border-2 transition-all duration-300 flex items-center gap-5 text-left relative overflow-hidden group',
+              state.strategyFilter === s.id
+                ? 'bg-white border-indigo-600 shadow-xl transform sm:scale-[1.02]'
+                : 'bg-white border-transparent shadow-sm hover:border-slate-200',
             ]"
           >
-            <span class="text-5xl group-hover:scale-110 transition-transform duration-300">{{ s.icon }}</span>
-            <div class="flex flex-col">
+            <span class="text-4xl sm:text-5xl group-hover:scale-110 transition-transform duration-300">{{ s.icon }}</span>
+            <div class="flex flex-col min-w-0">
               <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Stratégie</span>
-              <span class="text-2xl font-black text-slate-900">{{ s.label }}</span>
+              <span class="text-lg sm:text-2xl font-black text-slate-900 truncate">{{ s.label }}</span>
             </div>
-            <div v-if="state.strategyFilter === s.id" class="absolute top-8 right-8 w-4 h-4 bg-indigo-600 rounded-full animate-ping"></div>
+            <div v-if="state.strategyFilter === s.id" class="absolute top-7 right-7 w-3.5 h-3.5 bg-indigo-600 rounded-full animate-ping"></div>
           </button>
         </div>
 
         <!-- FILTER PANEL (collapsible + hide/show) -->
         <transition name="fade-slide">
-          <div v-if="state.showFilters" class="bg-white rounded-3xl shadow-lg border border-slate-100 p-10 space-y-10">
+          <div v-if="state.showFilters" class="bg-white rounded-3xl shadow-lg border border-slate-100 p-5 sm:p-8 lg:p-10 space-y-6 sm:space-y-10">
 
             <!-- Panel header actions -->
             <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
               <div>
                 <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Control Center</div>
-                <div class="text-3xl font-black text-slate-900 mt-2">Filtres Neural-X</div>
+                <div class="text-2xl sm:text-3xl font-black text-slate-900 mt-2">Filtres Neural-X</div>
               </div>
 
-              <div class="flex gap-3 flex-wrap">
-                <button @click="resetFilters" class="px-6 py-3 rounded-2xl bg-rose-600 text-white font-black shadow hover:opacity-90">Reset</button>
-                <button @click="state.showAdvanced = !state.showAdvanced"
-                        :class="['px-6 py-3 rounded-2xl font-black shadow border',
-                          state.showAdvanced ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50']">
+              <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <button @click="resetFilters" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-rose-600 text-white font-black shadow hover:opacity-90">
+                  Reset
+                </button>
+                <button
+                  @click="state.showAdvanced = !state.showAdvanced"
+                  :class="[
+                    'w-full sm:w-auto px-6 py-3 rounded-2xl font-black shadow border',
+                    state.showAdvanced
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50',
+                  ]"
+                >
                   {{ state.showAdvanced ? 'Hide Advanced' : 'Show Advanced' }}
                 </button>
               </div>
             </div>
 
             <!-- BASIC SECTION -->
-            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-8">
+            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-5 sm:p-8">
               <button @click="toggleSection('basic')" class="w-full flex items-center justify-between">
                 <div class="text-left">
                   <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</div>
-                  <div class="text-2xl font-black text-slate-900">Basic</div>
+                  <div class="text-xl sm:text-2xl font-black text-slate-900">Basic</div>
                 </div>
                 <div class="text-slate-500 font-black">{{ state.collapse.basic ? '▼' : '▲' }}</div>
               </button>
 
-              <div v-if="state.collapse.basic" class="mt-8 grid grid-cols-1 xl:grid-cols-4 gap-10">
+              <div v-if="state.collapse.basic" class="mt-6 sm:mt-8 grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-10">
                 <!-- Team Search -->
                 <div class="relative group">
                   <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-3 block">Rechercher Équipe</label>
-                  <input v-model="state.searchTeam" type="text" placeholder="Nom de l'équipe..."
-                         class="w-full pl-14 pr-8 py-5 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-900">
-                  <span class="absolute left-5 bottom-5 text-2xl opacity-30 group-focus-within:opacity-100">🔍</span>
+                  <input
+                    v-model="state.searchTeam"
+                    type="text"
+                    placeholder="Nom de l'équipe..."
+                    class="w-full pl-12 sm:pl-14 pr-6 sm:pr-8 py-4 sm:py-5 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-900"
+                  />
+                  <span class="absolute left-4 sm:left-5 bottom-4 sm:bottom-5 text-2xl opacity-30 group-focus-within:opacity-100">🔍</span>
                 </div>
 
                 <!-- Confidence -->
-                <div class="flex flex-col gap-5">
+                <div class="flex flex-col gap-4 sm:gap-5">
                   <div class="flex justify-between items-end px-2">
                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Min Confidence</label>
-                    <span class="text-2xl font-black text-indigo-600">{{ state.minConfidence }}%</span>
+                    <span class="text-xl sm:text-2xl font-black text-indigo-600">{{ state.minConfidence }}%</span>
                   </div>
-                  <input type="range" v-model.number="state.minConfidence" min="0" max="99"
-                         class="w-full h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                  <input type="range" v-model.number="state.minConfidence" min="0" max="99" class="w-full h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-indigo-600" />
                 </div>
 
                 <!-- MP range -->
-                <div class="flex flex-col gap-5">
+                <div class="flex flex-col gap-4 sm:gap-5">
                   <div class="flex justify-between items-end px-2">
                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Matchs Joués (MP)</label>
-                    <span class="text-2xl font-black text-indigo-600">{{ state.mpRange.min }} - {{ state.mpRange.max }}</span>
+                    <span class="text-xl sm:text-2xl font-black text-indigo-600">{{ state.mpRange.min }} - {{ state.mpRange.max }}</span>
                   </div>
-                  <div class="flex gap-5">
-                    <input type="range" v-model.number="state.mpRange.min" min="0" max="80" class="flex-1 h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-indigo-600">
-                    <input type="range" v-model.number="state.mpRange.max" min="0" max="80" class="flex-1 h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                  <div class="flex flex-col sm:flex-row gap-4 sm:gap-5">
+                    <input type="range" v-model.number="state.mpRange.min" min="0" max="80" class="flex-1 h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                    <input type="range" v-model.number="state.mpRange.max" min="0" max="80" class="flex-1 h-2.5 bg-white rounded-lg appearance-none cursor-pointer accent-indigo-600" />
                   </div>
                 </div>
 
                 <!-- Data Guard -->
-                <div class="flex items-center justify-between px-6 bg-white rounded-2xl py-5 border border-slate-100 self-end">
+                <div class="flex items-center justify-between px-5 sm:px-6 bg-white rounded-2xl py-4 sm:py-5 border border-slate-100 self-stretch xl:self-end">
                   <div class="flex flex-col">
                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Data Guard</span>
-                    <span class="text-base font-black text-slate-900">Masquer Sans Données</span>
+                    <span class="text-sm sm:text-base font-black text-slate-900">Masquer Sans Données</span>
                   </div>
-                  <button @click="state.hideNoData = !state.hideNoData"
-                          :class="['w-16 h-9 rounded-full transition-all relative', state.hideNoData ? 'bg-indigo-600' : 'bg-slate-300']">
+                  <button
+                    @click="state.hideNoData = !state.hideNoData"
+                    :class="['w-16 h-9 rounded-full transition-all relative', state.hideNoData ? 'bg-indigo-600' : 'bg-slate-300']"
+                  >
                     <div :class="['absolute top-1 w-7 h-7 bg-white rounded-full transition-all shadow-md', state.hideNoData ? 'right-1' : 'left-1']"></div>
                   </button>
                 </div>
@@ -967,42 +1063,63 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             </div>
 
             <!-- LEAGUES SECTION -->
-            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-8">
+            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-5 sm:p-8">
               <button @click="toggleSection('leagues')" class="w-full flex items-center justify-between">
                 <div class="text-left">
                   <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</div>
-                  <div class="text-2xl font-black text-slate-900">Leagues</div>
+                  <div class="text-xl sm:text-2xl font-black text-slate-900">Leagues</div>
                 </div>
                 <div class="text-slate-500 font-black">{{ state.collapse.leagues ? '▼' : '▲' }}</div>
               </button>
 
-              <div v-if="state.collapse.leagues" class="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-10">
+              <div v-if="state.collapse.leagues" class="mt-6 sm:mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-10">
                 <div class="relative">
-                  <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-3 block">Filtrer par Ligues ({{ state.selectedLeagues.length }})</label>
-                  <button @click="state.showLeagueFilter = !state.showLeagueFilter"
-                          class="w-full px-6 py-5 bg-white rounded-2xl font-bold text-slate-900 text-left flex justify-between items-center border border-slate-100">
-                    <span>{{ state.selectedLeagues.length === 0 ? 'Toutes les ligues' : state.selectedLeagues.length + ' sélectionnées' }}</span>
+                  <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-3 block">
+                    Filtrer par Ligues ({{ state.selectedLeagues.length }})
+                  </label>
+
+                  <button
+                    @click="state.showLeagueFilter = !state.showLeagueFilter"
+                    class="w-full px-5 sm:px-6 py-4 sm:py-5 bg-white rounded-2xl font-bold text-slate-900 text-left flex justify-between items-center border border-slate-100"
+                  >
+                    <span class="truncate">
+                      {{ state.selectedLeagues.length === 0 ? 'Toutes les ligues' : state.selectedLeagues.length + ' sélectionnées' }}
+                    </span>
                     <span class="text-xs transition-transform" :class="{ 'rotate-180': state.showLeagueFilter }">▼</span>
                   </button>
 
-                  <div v-if="state.showLeagueFilter" class="absolute z-50 mt-2 w-full max-h-96 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-4">
+                  <div
+                    v-if="state.showLeagueFilter"
+                    class="absolute z-50 mt-2 left-0 right-0 max-h-[70vh] sm:max-h-96 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 sm:p-6 space-y-4"
+                  >
                     <div class="sticky top-0 bg-white pb-4 border-b border-slate-100 space-y-4">
                       <div class="flex justify-between items-center">
                         <button @click="state.selectedLeagues = []" class="text-[10px] font-black text-indigo-600 uppercase">Tout Décocher</button>
                         <button @click="state.showLeagueFilter = false" class="text-[10px] font-black text-slate-400 uppercase">Fermer</button>
                       </div>
-                      <input v-model="state.searchLeagueQuery" type="text" placeholder="Rechercher une ligue..."
-                             class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500/20">
+
+                      <input
+                        v-model="state.searchLeagueQuery"
+                        type="text"
+                        placeholder="Rechercher une ligue..."
+                        class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
+                      />
                     </div>
 
                     <div class="space-y-2">
-                      <div v-for="league in filteredLeaguesList" :key="league" @click="toggleLeague(league)"
-                           class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors group">
-                        <div class="w-6 h-6 border-2 rounded-lg flex items-center justify-center transition-all"
-                             :class="state.selectedLeagues.includes(league) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200 group-hover:border-indigo-300'">
+                      <div
+                        v-for="league in filteredLeaguesList"
+                        :key="league"
+                        @click="toggleLeague(league)"
+                        class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors group"
+                      >
+                        <div
+                          class="w-6 h-6 border-2 rounded-lg flex items-center justify-center transition-all"
+                          :class="state.selectedLeagues.includes(league) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200 group-hover:border-indigo-300'"
+                        >
                           <span v-if="state.selectedLeagues.includes(league)" class="text-white text-xs">✓</span>
                         </div>
-                        <span class="text-sm font-black text-slate-700">{{ league }}</span>
+                        <span class="text-sm font-black text-slate-700 truncate">{{ league }}</span>
                       </div>
 
                       <div v-if="filteredLeaguesList.length === 0" class="text-center py-10 text-slate-400 font-bold text-sm italic">
@@ -1012,12 +1129,15 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
                   </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-100 p-6">
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                   <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Selected</div>
                   <div class="mt-4 flex flex-wrap gap-2">
                     <span v-if="state.selectedLeagues.length === 0" class="text-sm font-bold text-slate-500 italic">Toutes les ligues</span>
-                    <span v-for="l in state.selectedLeagues" :key="l"
-                          class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] font-black text-slate-700">
+                    <span
+                      v-for="l in state.selectedLeagues"
+                      :key="l"
+                      class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] font-black text-slate-700"
+                    >
                       {{ l }}
                     </span>
                   </div>
@@ -1026,18 +1146,18 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             </div>
 
             <!-- DATES SECTION -->
-            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-8">
+            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-5 sm:p-8">
               <button @click="toggleSection('dates')" class="w-full flex items-center justify-between">
                 <div class="text-left">
                   <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</div>
-                  <div class="text-2xl font-black text-slate-900">Dates</div>
+                  <div class="text-xl sm:text-2xl font-black text-slate-900">Dates</div>
                 </div>
                 <div class="text-slate-500 font-black">{{ state.collapse.dates ? '▼' : '▲' }}</div>
               </button>
 
-              <div v-if="state.collapse.dates" class="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-10">
-                <div class="flex flex-col gap-5">
-                  <div class="flex items-center justify-between px-2">
+              <div v-if="state.collapse.dates" class="mt-6 sm:mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-10">
+                <div class="flex flex-col gap-4 sm:gap-5">
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1 sm:px-2">
                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Plage de Dates</label>
                     <div class="flex gap-2">
                       <button @click="setToday" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black text-slate-600 hover:bg-slate-50">Today</button>
@@ -1045,15 +1165,16 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
                       <button @click="setAllDates" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black text-slate-600 hover:bg-slate-50">All</button>
                     </div>
                   </div>
-                  <div class="flex gap-3">
-                    <input v-model="state.minDate" type="date" class="flex-1 bg-white border border-slate-100 rounded-2xl p-4 font-bold text-sm" />
-                    <input v-model="state.maxDate" type="date" class="flex-1 bg-white border border-slate-100 rounded-2xl p-4 font-bold text-sm" />
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input v-model="state.minDate" type="date" class="w-full bg-white border border-slate-100 rounded-2xl p-4 font-bold text-sm" />
+                    <input v-model="state.maxDate" type="date" class="w-full bg-white border border-slate-100 rounded-2xl p-4 font-bold text-sm" />
                   </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-slate-100 p-6">
+                <div class="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6">
                   <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Current Range</div>
-                  <div class="mt-4 text-lg font-black text-slate-900">
+                  <div class="mt-4 text-base sm:text-lg font-black text-slate-900 break-words">
                     <span class="text-indigo-600">{{ state.minDate || '—' }}</span>
                     <span class="text-slate-400 mx-2">→</span>
                     <span class="text-indigo-600">{{ state.maxDate || '—' }}</span>
@@ -1066,62 +1187,75 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             </div>
 
             <!-- PERFORMANCE SECTION -->
-            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-8">
+            <div class="bg-slate-50/60 rounded-3xl border border-slate-100 p-5 sm:p-8">
               <button @click="toggleSection('performance')" class="w-full flex items-center justify-between">
                 <div class="text-left">
                   <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</div>
-                  <div class="text-2xl font-black text-slate-900">Performance</div>
+                  <div class="text-xl sm:text-2xl font-black text-slate-900">Performance</div>
                 </div>
                 <div class="text-slate-500 font-black">{{ state.collapse.performance ? '▼' : '▲' }}</div>
               </button>
 
-              <div v-if="state.collapse.performance" class="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-10">
-                <div v-for="r in [
-                      { l: 'Taux Victoire Domicile %', v: state.homeWinRange, t: 'indigo', a: 'indigo' },
-                      { l: 'Taux Défaite Domicile %', v: state.homeLossRange, t: 'rose', a: 'rose' },
-                      { l: 'Taux Victoire Extérieur %', v: state.awayWinRange, t: 'indigo', a: 'indigo' },
-                      { l: 'Taux Défaite Extérieur %', v: state.awayLossRange, t: 'rose', a: 'rose' },
-                    ]"
-                    :key="r.l" class="space-y-5">
+              <div v-if="state.collapse.performance" class="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-10">
+                <div
+                  v-for="r in [
+                    { l: 'Taux Victoire Domicile %', v: state.homeWinRange, t: 'indigo', a: 'indigo' },
+                    { l: 'Taux Défaite Domicile %', v: state.homeLossRange, t: 'rose', a: 'rose' },
+                    { l: 'Taux Victoire Extérieur %', v: state.awayWinRange, t: 'indigo', a: 'indigo' },
+                    { l: 'Taux Défaite Extérieur %', v: state.awayLossRange, t: 'rose', a: 'rose' },
+                  ]"
+                  :key="r.l"
+                  class="space-y-4 sm:space-y-5"
+                >
                   <div class="flex justify-between items-center">
                     <label class="text-[11px] font-black text-slate-400 uppercase">{{ r.l }}</label>
                     <span :class="['text-sm font-black', colorText[r.t as keyof typeof colorText]]">{{ r.v.min }}% - {{ r.v.max }}%</span>
                   </div>
-                  <div class="flex gap-5">
-                    <input type="range" v-model.number="r.v.min" min="0" max="100"
-                           :class="['flex-1 h-2 bg-white rounded-lg appearance-none', colorAccent[r.a as keyof typeof colorAccent]]" />
-                    <input type="range" v-model.number="r.v.max" min="0" max="100"
-                           :class="['flex-1 h-2 bg-white rounded-lg appearance-none', colorAccent[r.a as keyof typeof colorAccent]]" />
+                  <div class="flex flex-col sm:flex-row gap-4 sm:gap-5">
+                    <input
+                      type="range"
+                      v-model.number="r.v.min"
+                      min="0"
+                      max="100"
+                      :class="['flex-1 h-2 bg-white rounded-lg appearance-none', colorAccent[r.a as keyof typeof colorAccent]]"
+                    />
+                    <input
+                      type="range"
+                      v-model.number="r.v.max"
+                      min="0"
+                      max="100"
+                      :class="['flex-1 h-2 bg-white rounded-lg appearance-none', colorAccent[r.a as keyof typeof colorAccent]]"
+                    />
                   </div>
                 </div>
 
-                <div class="space-y-5">
+                <div class="space-y-4 sm:space-y-5">
                   <div class="flex justify-between items-center">
-                    <label class="text-[11px] font-black text-slate-400 uppercase">Home Wins ></label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase">Home Wins &gt;</label>
                     <span class="text-sm font-black text-emerald-600">{{ state.homeWinsThreshold }}</span>
                   </div>
                   <input type="range" v-model.number="state.homeWinsThreshold" min="0" max="40" class="w-full h-2 bg-white rounded-lg appearance-none accent-emerald-600" />
                 </div>
 
-                <div class="space-y-5">
+                <div class="space-y-4 sm:space-y-5">
                   <div class="flex justify-between items-center">
-                    <label class="text-[11px] font-black text-slate-400 uppercase">Home Losses <</label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase">Home Losses &lt;</label>
                     <span class="text-sm font-black text-rose-600">{{ state.homeLossesThreshold }}</span>
                   </div>
                   <input type="range" v-model.number="state.homeLossesThreshold" min="0" max="40" class="w-full h-2 bg-white rounded-lg appearance-none accent-rose-600" />
                 </div>
 
-                <div class="space-y-5">
+                <div class="space-y-4 sm:space-y-5">
                   <div class="flex justify-between items-center">
-                    <label class="text-[11px] font-black text-slate-400 uppercase">Away Wins ></label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase">Away Wins &gt;</label>
                     <span class="text-sm font-black text-emerald-600">{{ state.awayWinsThreshold }}</span>
                   </div>
                   <input type="range" v-model.number="state.awayWinsThreshold" min="0" max="40" class="w-full h-2 bg-white rounded-lg appearance-none accent-emerald-600" />
                 </div>
 
-                <div class="space-y-5">
+                <div class="space-y-4 sm:space-y-5">
                   <div class="flex justify-between items-center">
-                    <label class="text-[11px] font-black text-slate-400 uppercase">Away Losses <</label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase">Away Losses &lt;</label>
                     <span class="text-sm font-black text-rose-600">{{ state.awayLossesThreshold }}</span>
                   </div>
                   <input type="range" v-model.number="state.awayLossesThreshold" min="0" max="40" class="w-full h-2 bg-white rounded-lg appearance-none accent-rose-600" />
@@ -1130,24 +1264,24 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             </div>
 
             <!-- ADVANCED SECTION -->
-            <div v-if="state.showAdvanced" class="bg-slate-50/60 rounded-3xl border border-slate-100 p-8">
+            <div v-if="state.showAdvanced" class="bg-slate-50/60 rounded-3xl border border-slate-100 p-5 sm:p-8">
               <button @click="toggleSection('advanced')" class="w-full flex items-center justify-between">
                 <div class="text-left">
                   <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</div>
-                  <div class="text-2xl font-black text-slate-900">Advanced</div>
+                  <div class="text-xl sm:text-2xl font-black text-slate-900">Advanced</div>
                 </div>
                 <div class="text-slate-500 font-black">{{ state.collapse.advanced ? '▼' : '▲' }}</div>
               </button>
 
-              <div v-if="state.collapse.advanced" class="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-10">
+              <div v-if="state.collapse.advanced" class="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 sm:gap-10">
                 <!-- Pick -->
                 <div class="space-y-4">
                   <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">Pick</label>
-                  <div class="flex gap-2">
-                    <button @click="state.pickFilter='all'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.pickFilter==='all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200']">All</button>
-                    <button @click="state.pickFilter='1'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.pickFilter==='1' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 border border-slate-200']">1</button>
-                    <button @click="state.pickFilter='X'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.pickFilter==='X' ? 'bg-slate-600 text-white' : 'bg-white text-slate-700 border border-slate-200']">X</button>
-                    <button @click="state.pickFilter='2'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.pickFilter==='2' ? 'bg-rose-500 text-white' : 'bg-white text-slate-700 border border-slate-200']">2</button>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button @click="state.pickFilter='all'" :class="['py-3 rounded-2xl font-black text-sm', state.pickFilter==='all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200']">All</button>
+                    <button @click="state.pickFilter='1'" :class="['py-3 rounded-2xl font-black text-sm', state.pickFilter==='1' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 border border-slate-200']">1</button>
+                    <button @click="state.pickFilter='X'" :class="['py-3 rounded-2xl font-black text-sm', state.pickFilter==='X' ? 'bg-slate-600 text-white' : 'bg-white text-slate-700 border border-slate-200']">X</button>
+                    <button @click="state.pickFilter='2'" :class="['py-3 rounded-2xl font-black text-sm', state.pickFilter==='2' ? 'bg-rose-500 text-white' : 'bg-white text-slate-700 border border-slate-200']">2</button>
                   </div>
                 </div>
 
@@ -1157,10 +1291,10 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">Dominance</label>
                     <span class="text-sm font-black text-indigo-600">{{ state.minDominancePct }}%</span>
                   </div>
-                  <div class="flex gap-2">
-                    <button @click="state.dominanceSideFilter='all'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.dominanceSideFilter==='all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200']">All</button>
-                    <button @click="state.dominanceSideFilter='home'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.dominanceSideFilter==='home' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 border border-slate-200']">Home</button>
-                    <button @click="state.dominanceSideFilter='away'" :class="['flex-1 py-3 rounded-2xl font-black text-sm', state.dominanceSideFilter==='away' ? 'bg-rose-500 text-white' : 'bg-white text-slate-700 border border-slate-200']">Away</button>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button @click="state.dominanceSideFilter='all'" :class="['py-3 rounded-2xl font-black text-sm', state.dominanceSideFilter==='all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200']">All</button>
+                    <button @click="state.dominanceSideFilter='home'" :class="['py-3 rounded-2xl font-black text-sm', state.dominanceSideFilter==='home' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 border border-slate-200']">Home</button>
+                    <button @click="state.dominanceSideFilter='away'" :class="['py-3 rounded-2xl font-black text-sm', state.dominanceSideFilter==='away' ? 'bg-rose-500 text-white' : 'bg-white text-slate-700 border border-slate-200']">Away</button>
                   </div>
                   <input type="range" v-model.number="state.minDominancePct" min="0" max="100" class="w-full h-2 bg-white rounded-lg appearance-none accent-indigo-600" />
                 </div>
@@ -1174,8 +1308,10 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 
                   <div class="flex items-center justify-between px-4 bg-white rounded-2xl py-3 border border-slate-200">
                     <div class="text-sm font-black text-slate-900">Only Value</div>
-                    <button @click="state.showOnlyValue = !state.showOnlyValue"
-                            :class="['w-14 h-8 rounded-full transition-all relative', state.showOnlyValue ? 'bg-emerald-600' : 'bg-slate-300']">
+                    <button
+                      @click="state.showOnlyValue = !state.showOnlyValue"
+                      :class="['w-14 h-8 rounded-full transition-all relative', state.showOnlyValue ? 'bg-emerald-600' : 'bg-slate-300']"
+                    >
                       <div :class="['absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-md', state.showOnlyValue ? 'right-1' : 'left-1']"></div>
                     </button>
                   </div>
@@ -1205,14 +1341,15 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
                 <div class="space-y-4 md:col-span-2">
                   <div class="flex justify-between items-center">
                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">Pick Odds Range</label>
-                    <span class="text-sm font-black text-slate-900">{{ state.pickOddRange.min.toFixed(2) }} - {{ state.pickOddRange.max.toFixed(2) }}</span>
+                    <span class="text-sm font-black text-slate-900">
+                      {{ state.pickOddRange.min.toFixed(2) }} - {{ state.pickOddRange.max.toFixed(2) }}
+                    </span>
                   </div>
-                  <div class="flex gap-5">
+                  <div class="flex flex-col sm:flex-row gap-4 sm:gap-5">
                     <input type="range" v-model.number="state.pickOddRange.min" min="1" max="50" step="0.1" class="flex-1 h-2 bg-white rounded-lg appearance-none accent-slate-900" />
                     <input type="range" v-model.number="state.pickOddRange.max" min="1" max="100" step="0.1" class="flex-1 h-2 bg-white rounded-lg appearance-none accent-slate-900" />
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -1220,52 +1357,71 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
         </transition>
 
         <!-- Matches Grid -->
-        <div v-if="filteredMatches.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-          <div v-for="(match, index) in filteredMatches" :key="match.id"
-               :style="{ animationDelay: `${index * 0.05}s` }"
-               class="neural-card group bg-white/80 backdrop-blur-md border border-white/90 shadow-xl rounded-3xl p-10 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 relative overflow-hidden">
+        <div v-if="filteredMatches.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-8 lg:gap-10">
+          <div
+            v-for="(match, index) in filteredMatches"
+            :key="match.id"
+            :style="{ animationDelay: `${index * 0.05}s` }"
+            class="neural-card group bg-white/80 backdrop-blur-md border border-white/90 shadow-xl rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 relative overflow-hidden"
+          >
+            <div v-if="match.analysis.isNeuralXElite" class="absolute -right-16 top-8 sm:top-10 rotate-45 bg-slate-900 text-white text-[10px] font-black py-2 px-20 shadow-2xl z-10">
+              NEURAL-X ELITE
+            </div>
+            <div v-else-if="match.analysis.isTopPick" class="absolute -right-16 top-8 sm:top-10 rotate-45 bg-amber-500 text-white text-[10px] font-black py-2 px-20 shadow-2xl z-10">
+              TOP PICK
+            </div>
+            <div v-if="match.analysis.isValuePick" class="absolute left-6 sm:left-10 top-6 sm:top-8 bg-emerald-600 text-white text-[10px] font-black py-2 px-4 rounded-2xl shadow-lg z-10">
+              VALUE
+            </div>
 
-            <div v-if="match.analysis.isNeuralXElite" class="absolute -right-16 top-10 rotate-45 bg-slate-900 text-white text-[10px] font-black py-2 px-20 shadow-2xl z-10">NEURAL-X ELITE</div>
-            <div v-else-if="match.analysis.isTopPick" class="absolute -right-16 top-10 rotate-45 bg-amber-500 text-white text-[10px] font-black py-2 px-20 shadow-2xl z-10">TOP PICK</div>
-            <div v-if="match.analysis.isValuePick" class="absolute left-10 top-8 bg-emerald-600 text-white text-[10px] font-black py-2 px-4 rounded-2xl shadow-lg z-10">VALUE</div>
-
-            <div class="flex justify-between items-center mb-10">
-              <div class="px-6 py-2 bg-slate-900 rounded-full text-[11px] font-black uppercase tracking-widest text-white">
+            <div class="flex justify-between items-center mb-6 sm:mb-10">
+              <div class="px-4 sm:px-6 py-2 bg-slate-900 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-white">
                 {{ match.match_date }} • {{ match.match_time }}
               </div>
-              <div class="flex items-center gap-4">
-                <div class="text-4xl font-black text-indigo-600 tracking-tighter">{{ match.analysis.confidence }}%</div>
-                <div :class="[
-                      'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg',
-                      match.analysis.pick === '1' ? 'bg-indigo-600' : (match.analysis.pick === '2' ? 'bg-rose-500' : 'bg-slate-500')
-                    ]">
+              <div class="flex items-center gap-3 sm:gap-4">
+                <div class="text-3xl sm:text-4xl font-black text-indigo-600 tracking-tighter">{{ match.analysis.confidence }}%</div>
+                <div
+                  :class="[
+                    'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl font-black text-white shadow-lg',
+                    match.analysis.pick === '1' ? 'bg-indigo-600' : match.analysis.pick === '2' ? 'bg-rose-500' : 'bg-slate-500',
+                  ]"
+                >
                   {{ match.analysis.pick }}
                 </div>
               </div>
             </div>
 
-            <div class="mb-8 flex items-center justify-between gap-4">
-              <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ match.analysis.dominant.label }}</div>
-              <div class="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-600">
+            <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {{ match.analysis.dominant.label }}
+              </div>
+              <div class="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-600 self-start sm:self-auto">
                 Dom: <span class="text-slate-900">{{ Math.round(match.analysis.dominant.index * 100) }}%</span>
               </div>
             </div>
 
-            <!-- Teams -->
-            <div class="flex items-center justify-between gap-6 mb-10">
-              <div class="flex-1 text-center space-y-4">
-                <div class="relative w-24 h-24 mx-auto">
-                  <div :class="[
-                        'w-full h-full rounded-3xl flex items-center justify-center text-4xl font-black shadow-inner transition-all duration-500',
-                        match.analysis.home.isBetterRank ? 'bg-indigo-50 text-indigo-600 border-4 border-indigo-200 animate-pulse-rank' : 'bg-slate-50 text-slate-900'
-                      ]">
+            <!-- Teams (stack on mobile, row on sm+) -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-5 sm:gap-6 mb-6 sm:mb-10">
+              <!-- Home -->
+              <div class="flex-1 text-center space-y-3 sm:space-y-4">
+                <div class="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto">
+                  <div
+                    :class="[
+                      'w-full h-full rounded-2xl sm:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl font-black shadow-inner transition-all duration-500',
+                      match.analysis.home.isBetterRank
+                        ? 'bg-indigo-50 text-indigo-600 border-4 border-indigo-200 animate-pulse-rank'
+                        : 'bg-slate-50 text-slate-900',
+                    ]"
+                  >
                     {{ match.home_team.charAt(0) }}
                   </div>
-                  <div class="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-xl">
+                  <div class="absolute -bottom-2 -right-2 bg-slate-900 text-white text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-xl shadow-xl">
                     #{{ match.analysis.home.rank || '?' }}
                   </div>
                 </div>
-                <div class="font-black text-slate-900 text-lg truncate">{{ match.home_team }}</div>
+
+                <div class="font-black text-slate-900 text-base sm:text-lg truncate">{{ match.home_team }}</div>
+
                 <div class="flex flex-col gap-2">
                   <div class="flex justify-center gap-2">
                     <span class="text-[11px] font-black px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg">{{ Math.round(match.analysis.home.winRate) }}% V</span>
@@ -1278,27 +1434,35 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
                 </div>
               </div>
 
-              <div class="flex flex-col items-center gap-3">
-                <div class="text-xs font-black text-slate-200 uppercase tracking-[0.6em]">VS</div>
+              <!-- VS / H2H -->
+              <div class="flex flex-row sm:flex-col items-center justify-center gap-3">
+                <div class="text-xs font-black text-slate-200 uppercase tracking-[0.45em] sm:tracking-[0.6em]">VS</div>
                 <div class="px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 text-center">
                   <div class="text-[9px] font-black text-slate-400 uppercase mb-1">H2H</div>
                   <div class="text-xs font-black text-slate-900">{{ match.analysis.h2h.hWins }}-{{ match.analysis.h2h.draws }}-{{ match.analysis.h2h.aWins }}</div>
                 </div>
               </div>
 
-              <div class="flex-1 text-center space-y-4">
-                <div class="relative w-24 h-24 mx-auto">
-                  <div :class="[
-                        'w-full h-full rounded-3xl flex items-center justify-center text-4xl font-black shadow-inner transition-all duration-500',
-                        match.analysis.away.isBetterRank ? 'bg-indigo-50 text-indigo-600 border-4 border-indigo-200 animate-pulse-rank' : 'bg-slate-50 text-slate-900'
-                      ]">
+              <!-- Away -->
+              <div class="flex-1 text-center space-y-3 sm:space-y-4">
+                <div class="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto">
+                  <div
+                    :class="[
+                      'w-full h-full rounded-2xl sm:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl font-black shadow-inner transition-all duration-500',
+                      match.analysis.away.isBetterRank
+                        ? 'bg-indigo-50 text-indigo-600 border-4 border-indigo-200 animate-pulse-rank'
+                        : 'bg-slate-50 text-slate-900',
+                    ]"
+                  >
                     {{ match.away_team.charAt(0) }}
                   </div>
-                  <div class="absolute -bottom-2 -right-2 bg-slate-900 text-white text-xs font-black px-3 py-1.5 rounded-xl shadow-xl">
+                  <div class="absolute -bottom-2 -right-2 bg-slate-900 text-white text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-xl shadow-xl">
                     #{{ match.analysis.away.rank || '?' }}
                   </div>
                 </div>
-                <div class="font-black text-slate-900 text-lg truncate">{{ match.away_team }}</div>
+
+                <div class="font-black text-slate-900 text-base sm:text-lg truncate">{{ match.away_team }}</div>
+
                 <div class="flex flex-col gap-2">
                   <div class="flex justify-center gap-2">
                     <span class="text-[11px] font-black px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg">{{ Math.round(match.analysis.away.winRate) }}% V</span>
@@ -1312,20 +1476,22 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
               </div>
             </div>
 
-            <div class="bg-slate-50 rounded-2xl p-6 mb-8 border-l-8 border-indigo-600">
+            <div class="bg-slate-50 rounded-2xl p-5 sm:p-6 mb-6 sm:mb-8 border-l-8 border-indigo-600">
               <div class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2">Insight Neural-X</div>
               <p class="text-xs font-bold text-slate-600 leading-relaxed italic">"{{ match.analysis.why }}"</p>
             </div>
 
             <!-- More stats -->
-            <button @click="toggleCard(match.id)"
-                    class="w-full mb-8 px-6 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm font-black text-sm text-slate-900 flex items-center justify-between hover:bg-slate-50 transition-all">
+            <button
+              @click="toggleCard(match.id)"
+              class="w-full mb-6 sm:mb-8 px-5 sm:px-6 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm font-black text-sm text-slate-900 flex items-center justify-between hover:bg-slate-50 transition-all"
+            >
               <span>📊 More Stats</span>
               <span class="text-xs text-slate-400" :class="{ 'rotate-180': state.openCardId === match.id }">▼</span>
             </button>
 
-            <div v-if="state.openCardId === match.id" class="mb-10 bg-white/60 rounded-2xl border border-white/80 p-6 space-y-5">
-              <div class="grid grid-cols-3 gap-4">
+            <div v-if="state.openCardId === match.id" class="mb-8 sm:mb-10 bg-white/60 rounded-2xl border border-white/80 p-5 sm:p-6 space-y-5">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                   <div class="text-[10px] font-black text-slate-400 uppercase mb-2">Model Probs</div>
                   <div class="text-xs font-black text-slate-900 space-y-1">
@@ -1347,8 +1513,19 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
                 <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                   <div class="text-[10px] font-black text-slate-400 uppercase mb-2">Edges</div>
                   <div class="text-xs font-black text-slate-900 space-y-1">
-                    <div>Pick Edge: <span :class="match.analysis.edge.pickEdge >= 0 ? 'text-emerald-600' : 'text-rose-500'">{{ (match.analysis.edge.pickEdge * 100).toFixed(1) }}pp</span></div>
-                    <div>Best: <span :class="match.analysis.edge.bestEdge >= 0 ? 'text-emerald-600' : 'text-rose-500'">{{ (match.analysis.edge.bestEdge * 100).toFixed(1) }}pp</span> ({{ match.analysis.edge.bestMarket }})</div>
+                    <div>
+                      Pick Edge:
+                      <span :class="match.analysis.edge.pickEdge >= 0 ? 'text-emerald-600' : 'text-rose-500'">
+                        {{ (match.analysis.edge.pickEdge * 100).toFixed(1) }}pp
+                      </span>
+                    </div>
+                    <div>
+                      Best:
+                      <span :class="match.analysis.edge.bestEdge >= 0 ? 'text-emerald-600' : 'text-rose-500'">
+                        {{ (match.analysis.edge.bestEdge * 100).toFixed(1) }}pp
+                      </span>
+                      ({{ match.analysis.edge.bestMarket }})
+                    </div>
                     <div>H2H Avg Goals: <span class="text-slate-900">{{ match.analysis.h2h.avgGoals.toFixed(2) }}</span></div>
                   </div>
                 </div>
@@ -1356,33 +1533,38 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
             </div>
 
             <!-- Odds & action -->
-            <div class="flex items-center justify-between">
-              <div class="flex gap-6">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div class="flex justify-between sm:justify-start gap-6">
                 <div v-for="(odd, label) in { '1': match.home_odds, 'X': match.draw_odds, '2': match.away_odds }" :key="label" class="text-center">
                   <div class="text-[10px] font-black text-slate-300 uppercase">{{ label }}</div>
                   <div :class="['font-black text-lg', toNum(odd) >= 1.7 ? 'text-indigo-600 scale-110' : 'text-slate-900']">{{ odd || '—' }}</div>
                 </div>
               </div>
 
-              <a v-if="match.match_url" :href="match.match_url" target="_blank"
-                 class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-lg transform hover:scale-105">
+              <a
+                v-if="match.match_url"
+                :href="match.match_url"
+                target="_blank"
+                class="w-full sm:w-auto text-center px-8 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-lg transform hover:scale-[1.01] sm:hover:scale-105"
+              >
                 DÉTAILS →
               </a>
             </div>
-
           </div>
         </div>
 
         <!-- Empty state -->
-        <div v-else class="bg-white rounded-3xl py-64 text-center shadow-lg border border-slate-100">
-          <div class="text-[120px] mb-12 grayscale opacity-10">🧠</div>
-          <h2 class="text-6xl font-black text-slate-900 tracking-tighter">Aucun Match Neural-X</h2>
-          <p class="text-slate-400 mt-6 max-w-lg mx-auto font-bold text-2xl">Ajustez vos filtres pour trouver les opportunités de la journée.</p>
+        <div v-else class="bg-white rounded-3xl py-24 sm:py-40 lg:py-64 text-center shadow-lg border border-slate-100">
+          <div class="text-[80px] sm:text-[120px] mb-10 sm:mb-12 grayscale opacity-10">🧠</div>
+          <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">Aucun Match Neural-X</h2>
+          <p class="text-slate-400 mt-5 sm:mt-6 max-w-lg mx-auto font-bold text-lg sm:text-2xl px-6">
+            Ajustez vos filtres pour trouver les opportunités de la journée.
+          </p>
         </div>
 
       </div>
     </div>
- 
+  </AppLayout>
 </template>
 
 <style scoped>
@@ -1392,13 +1574,26 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 }
 
 @keyframes neural-reveal {
-  from { opacity: 0; transform: translateY(40px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes pulse-rank {
-  0%, 100% { border-color: rgba(79, 70, 229, 0.1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
-  50% { border-color: rgba(79, 70, 229, 0.5); box-shadow: 0 0 30px 0 rgba(79, 70, 229, 0.1); }
+  0%,
+  100% {
+    border-color: rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+  50% {
+    border-color: rgba(79, 70, 229, 0.5);
+    box-shadow: 0 0 30px 0 rgba(79, 70, 229, 0.1);
+  }
 }
 
 .animate-pulse-rank {
@@ -1410,21 +1605,29 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Smooth show/hide for filter panel */
-.fade-slide-enter-active, .fade-slide-leave-active {
+.fade-slide-enter-active,
+.fade-slide-leave-active {
   transition: all 220ms ease;
 }
-.fade-slide-enter-from, .fade-slide-leave-to {
+.fade-slide-enter-from,
+.fade-slide-leave-to {
   opacity: 0;
   transform: translateY(10px);
 }
 
-/* Custom Range Slider */
-input[type=range]::-webkit-slider-thumb {
+/* Custom Range Slider (desktop/default) */
+input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   height: 24px;
   width: 24px;
@@ -1436,11 +1639,25 @@ input[type=range]::-webkit-slider-thumb {
   margin-top: -8px;
 }
 
-input[type=range]::-webkit-slider-runnable-track {
+input[type='range']::-webkit-slider-runnable-track {
   width: 100%;
   height: 8px;
   background: #ffffff;
   border-radius: 4px;
   border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Mobile: slightly smaller thumb so it doesn’t feel oversized */
+@media (max-width: 640px) {
+  input[type='range']::-webkit-slider-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 7px;
+    border: 3px solid white;
+    margin-top: -6px;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 7px;
+  }
 }
 </style>
