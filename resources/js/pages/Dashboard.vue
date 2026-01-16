@@ -729,12 +729,7 @@ const weeklyChallengeCombo = computed(() => getWeeklyChallengeCombo(analyzedMatc
 
         <!-- Header -->
         <header class="flex flex-col lg:flex-row justify-between items-center gap-6">
-          <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-slate-900 rounded-3xl flex items-center justify-center text-white text-4xl shadow-2xl shadow-slate-200">🧠</div>
-            <h1 class="text-6xl font-black tracking-tighter text-slate-900">
-              Ultimate<span class="text-indigo-600">Neural</span><span class="text-slate-300 ml-2">Dashboard</span>
-            </h1>
-          </div>
+         
 
           <div class="flex flex-wrap items-center gap-4 justify-center">
             <button
